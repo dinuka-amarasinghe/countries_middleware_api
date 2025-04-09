@@ -37,3 +37,20 @@ class APIKey(db.Model):
         """ Hash the API key before saving it """
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(api_key.encode('utf-8'), salt)
+
+
+    
+class APIUsage(db.Model):
+    __tablename__ = 'api_usage'
+
+    id = db.Column(db.Integer, primary_key=True)
+    api_key = db.Column(db.String(256), nullable=False)  # Storing the API key in plain text
+    endpoint = db.Column(db.String(256), nullable=False)  # The endpoint accessed
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<APIUsage api_key={self.api_key}, endpoint={self.endpoint}, timestamp={self.timestamp}>'
+
+
+
+

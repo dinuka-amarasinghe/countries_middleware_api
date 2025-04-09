@@ -7,7 +7,6 @@ import secrets
 import bcrypt
 import re
 
-
 def register_user(data):
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
@@ -64,20 +63,6 @@ def user_login(data):
     return jsonify({'message': 'Login successful.'}), 200
 
 
-# def generate_api_key(user):
-#     # Generate a secure random API key (using secrets for cryptographic security)
-#     api_key = secrets.token_hex(32)  # Generate a 64-character hexadecimal string
-
-#     # Create the API key record
-#     new_api_key = APIKey(key=api_key, user_id=user.id)
-    
-#     # Save to the database
-#     db.session.add(new_api_key)
-#     db.session.commit()
-
-#     return jsonify({'api_key': api_key}), 201
-
-
 def generate_api_key(user):
     # Generate a secure random API key
     api_key = secrets.token_hex(32)
@@ -115,4 +100,5 @@ def validate_api_key(api_key):
     if bcrypt.checkpw(api_key.encode('utf-8'), key_record.key):
         return key_record.user  # If valid, return the associated user
     return None  # If the API key is invalid
+
 
