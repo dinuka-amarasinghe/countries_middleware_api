@@ -16,15 +16,17 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
 
-    from .routes.base import base_bp
     from .routes.authentication import authentication_blueprint
     from .routes.rest_api import rest_api_bp
 
     # Register Blueprints
-    app.register_blueprint(base_bp)
     app.register_blueprint(authentication_blueprint)
     app.register_blueprint(rest_api_bp)
 
+    @app.route('/')
+    def index():
+        return "Flask App is Running!"
+    
     return app
 
 # # This is the function used by Flask-Login to load the user from the database
