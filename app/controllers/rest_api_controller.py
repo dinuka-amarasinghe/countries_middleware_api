@@ -7,7 +7,6 @@ import requests
 import json
 from app.models import APIUsage
 
-
 def get_all_countries():
     # Validate API key for the logged-in user
     api_key = request.headers.get('X-API-KEY')
@@ -55,7 +54,6 @@ def get_all_countries():
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error fetching data: {e}"}), 500
-
     
 
 def get_country_by_name(country_name):

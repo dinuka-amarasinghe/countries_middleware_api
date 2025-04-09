@@ -4,18 +4,15 @@ from app.controllers.auth_controller import register_user, user_login, generate_
 
 authentication_blueprint = Blueprint('authentication', __name__, url_prefix='/auth')
 
-
 @authentication_blueprint.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     return register_user(data)
 
-
 @authentication_blueprint.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     return user_login(data)
-
 
 # Non-protected dashboard route
 @authentication_blueprint.route('/dashboard', methods=['GET'])
