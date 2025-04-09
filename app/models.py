@@ -1,5 +1,8 @@
 from datetime import datetime
 from flask_login import UserMixin
+import bcrypt
+from app import db
+from datetime import datetime
 
 from app import db
 
@@ -14,10 +17,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
-
-import bcrypt
-from app import db
-from datetime import datetime
 
 class APIKey(db.Model):
     __tablename__ = 'api_keys'

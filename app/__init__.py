@@ -12,6 +12,7 @@ def create_app():
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object('app.config.Config')
+    app.config['JSON_SORT_KEYS'] = False
 
     db.init_app(app)
     login_manager.init_app(app)
