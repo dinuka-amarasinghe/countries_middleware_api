@@ -1,11 +1,12 @@
 from flask import request, jsonify, Response
-from flask_login import login_required, current_user
+from flask_login import current_user
 from app.controllers.auth_controller import validate_api_key
 from app import db
 from collections import OrderedDict
 import requests
 import json
-from app.models import APIUsage
+from app.models import APIKey, APIUsage
+import bcrypt
 
 def get_all_countries():
     # Validate API key for the logged-in user
@@ -102,14 +103,33 @@ def get_country_by_name(country_name):
         return jsonify({"error": f"Error fetching data: {e}"}), 500
 
     
-
-def log_api_usage(api_key, endpoint):
-    """ Log API key usage to the database by storing the accessed endpoint """
+def log_api_usage(api_key_plaintext, endpoint):
     try:
-        # Log the API usage with the provided API key and endpoint
-        usage = APIUsage(api_key=api_key, endpoint=endpoint)
-        db.session.add(usage)
-        db.session.commit()  # Commit to the database
-        print(f"API usage logged for api_key {api_key} for endpoint {endpoint}")
+        from app.models import APIKey  # To avoid circular import if needed
+
+        for key_record in current_user.api_keys:
+            # Ensure both sides of checkpw are bytes
+            stored_hash = key_record.key
+            if isinstance(stored_hash, str):
+                stored_hash = stored_hash.encode('utf-8')
+
+            if bcrypt.checkpw(api_key_plaintext.encode('utf-8'), stored_hash):
+                usage = APIUsage(
+                    user_id=current_user.id,
+                    api_key_id=key_record.id,
+                    endpoint=endpoint
+                )
+                db.session.add(usage)
+                db.session.commit()
+                print(f"✅ API usage logged for user {current_user.id} at {endpoint}")
+                return
+
+        print("❌ No matching API key found for logging usage")
+        return jsonify({"error": "Invalid API key."}), 401
+
     except Exception as e:
         print(f"Error in log_api_usage: {e}")
+        return jsonify({"error": "Error logging API usage."}), 500
+
+
+

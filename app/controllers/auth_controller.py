@@ -1,6 +1,6 @@
 from flask import jsonify
 from app import db
-from app.models import User, APIKey
+from app.models import User, APIKey, APIUsage
 from app.utils.security import hash_password
 from flask_login import login_user, current_user 
 import secrets
@@ -67,7 +67,10 @@ def generate_api_key(user):
 
 def regenerate_api_key(user):
     old_api_key = APIKey.query.filter_by(user_id=user.id).first()
+
     if old_api_key:
+        APIUsage.query.filter_by(api_key_id=old_api_key.id).delete()
+
         db.session.delete(old_api_key)
         db.session.commit()
 
@@ -78,11 +81,9 @@ def validate_api_key(api_key):
     key_record = APIKey.query.filter_by(user_id=current_user.id).first()
 
     if not key_record:
-        return None  # Invalid API key
+        return None  
 
-    # Compare the provided plain-text API key with the stored hashed key
     if bcrypt.checkpw(api_key.encode('utf-8'), key_record.key):
-        return key_record.user  # If valid, return the associated user
-    return None  # If the API key is invalid
-
+        return key_record.user  
+    return None
 
