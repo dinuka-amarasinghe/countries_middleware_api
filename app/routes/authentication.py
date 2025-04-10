@@ -32,12 +32,12 @@ def login():
                 'email': request.form.get('email'),
                 'password': request.form.get('password')
             }
-        return user_login(data)
+        return('Successfully logged in')
     return render_template('login.html')
 
 
 # ---------- Logout ----------
-@authentication_blueprint.route('/logout', methods=['GET'])
+@authentication_blueprint.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()

@@ -44,7 +44,9 @@
             <a href="/" class="navbar-brand">Countries API</a>
             <div class="d-flex">
                 {% if current_user.is_authenticated %}
-                <a href="/auth/logout" class="btn btn-sm btn-purple">Logout</a>
+                <form method="POST" action="/auth/logout" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-purple">Logout</button>
+                </form>
                 {% endif %}
             </div>
         </div>
