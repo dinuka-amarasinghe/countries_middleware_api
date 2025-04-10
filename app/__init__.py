@@ -24,9 +24,9 @@ def create_app():
     app.register_blueprint(authentication_blueprint)
     app.register_blueprint(rest_api_bp)
 
-    @app.route('/')
-    def index():
-        return render_template('login.html')  
+    @app.route('/', methods=['GET'])
+    def login_page():
+        return render_template('login.html')
     
     return app
 

@@ -1,29 +1,52 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, render_template, redirect, url_for, flash, session
 from flask_login import login_required, logout_user, current_user
 from app.controllers.auth_controller import register_user, user_login, generate_api_key, regenerate_api_key
-from app.models import APIKey, APIUsage
+from app.models import APIUsage
 
 authentication_blueprint = Blueprint('authentication', __name__, url_prefix='/auth')
 
-@authentication_blueprint.route('/register', methods=['POST'])
+
+# ---------- Register ----------
+@authentication_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
-    data = request.get_json()
-    return register_user(data)
+    if request.method == 'POST':
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = {
+                'email': request.form.get('email'),
+                'password': request.form.get('password')
+            }
+        return register_user(data)
+    return render_template('register.html')
 
 
-@authentication_blueprint.route('/login', methods=['POST'])
+# ---------- Login ----------
+@authentication_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
-    return user_login(data)
+    if request.method == 'POST':
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = {
+                'email': request.form.get('email'),
+                'password': request.form.get('password')
+            }
+        return user_login(data)
+    return render_template('login.html')
 
 
-@authentication_blueprint.route('/logout', methods=['POST'])
+# ---------- Logout ----------
+@authentication_blueprint.route('/logout', methods=['GET'])
 @login_required
 def logout():
-    logout_user()  
-    return jsonify({'message': 'Logged out successfully.'}), 200
+    logout_user()
+    session.pop('plain_api_key', None)
+    flash("Logged out successfully.", "success")
+    return redirect(url_for('authentication.login'))
 
 
+# ---------- API Key Management ----------
 @authentication_blueprint.route('/generate-api-key', methods=['POST'])
 @login_required
 def generate_key():
@@ -36,26 +59,13 @@ def regenerate_key():
     return regenerate_api_key(current_user)
 
 
-########################################################
-
-@authentication_blueprint.route('/login', methods=['GET'])
-def login_page():
-    return render_template('login.html')
-
-
-@authentication_blueprint.route('/register', methods=['GET'])
-def register_page():
-    return render_template('dashboard.html')
-
-
+# ---------- Dashboard ----------
 @authentication_blueprint.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    # Get current API key
-    api_key_entry = APIKey.query.filter_by(user_id=current_user.id).first()
-    api_key = api_key_entry.key if api_key_entry else None
-
-    # Get usage logs
+    api_key = session.get('plain_api_key') 
     usages = APIUsage.query.filter_by(user_id=current_user.id).order_by(APIUsage.timestamp.desc()).all()
-
     return render_template('dashboard.html', api_key=api_key, usages=usages)
+
+
+

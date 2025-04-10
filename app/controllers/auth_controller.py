@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import request, redirect, url_for, flash, session, jsonify
 from app import db
 from app.models import User, APIKey, APIUsage
 from app.utils.security import hash_password
@@ -11,27 +11,35 @@ def register_user(data):
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
 
+    # Validation
     if not email or not password:
-        return jsonify({'error': 'Both email and password are required.'}), 400
+        return _handle_register_response("Email and password are required.", False)
 
-    email_regex = r'^\S+@\S+\.\S+$'
-    if not re.match(email_regex, email):
-        return jsonify({'error': 'Invalid email format.'}), 400
+    if not re.match(r'^\S+@\S+\.\S+$', email):
+        return _handle_register_response("Invalid email format.", False)
 
     if len(password) < 8:
-        return jsonify({'error': 'Password must be at least 8 characters long.'}), 400
+        return _handle_register_response("Password must be at least 8 characters long.", False)
 
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        return jsonify({'error': 'User already exists.'}), 409
-    
-    hashed_pw = hash_password(password)
+        return _handle_register_response("User already exists.", False)
 
+    # Create user
+    hashed_pw = hash_password(password)
     new_user = User(email=email, password_hash=hashed_pw)
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': 'User registered successfully.'}), 201
+    return _handle_register_response("Registration successful! Please log in.", True)
+
+
+def _handle_register_response(message, success):
+    if request.is_json:
+        return jsonify({'message': message}), 201 if success else 400
+
+    flash(message, 'success' if success else 'danger')
+    return redirect(url_for('authentication.login' if success else 'authentication.register'))
 
 
 def user_login(data):
@@ -39,30 +47,38 @@ def user_login(data):
     password = data.get('password', '').strip()
 
     if not email or not password:
-        return jsonify({'error': 'Email and password are required.'}), 400
+        flash('Email and password are required.', 'danger')
+        return redirect(url_for('authentication.login'))
 
     user = User.query.filter_by(email=email).first()
     if not user:
-        return jsonify({'error': 'User does not exist.'}), 404
+        flash('User does not exist.', 'danger')
+        return redirect(url_for('authentication.login'))
 
     if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
-        return jsonify({'error': 'Invalid credentials, Please try again.'}), 401
+        flash('Invalid credentials, please try again.', 'danger')
+        return redirect(url_for('authentication.login'))
 
     login_user(user)
-
-    return jsonify({'message': 'Login successful.'}), 200
+    flash('Login successful!', 'success')
+    return redirect(url_for('authentication.dashboard'))
 
 
 def generate_api_key(user):
     api_key = secrets.token_hex(32)
-
     hashed_key = APIKey.hash_key(api_key)
 
     new_api_key = APIKey(key=hashed_key, user_id=user.id)
     db.session.add(new_api_key)
     db.session.commit()
 
-    return jsonify({'api_key': api_key}), 201 
+    session['plain_api_key'] = api_key
+
+    if request.is_json:
+        return jsonify({'api_key': api_key}), 201
+
+    flash("API key generated successfully!", "success")
+    return redirect(url_for('authentication.dashboard'))
 
 
 def regenerate_api_key(user):
@@ -70,20 +86,32 @@ def regenerate_api_key(user):
 
     if old_api_key:
         APIUsage.query.filter_by(api_key_id=old_api_key.id).delete()
-
         db.session.delete(old_api_key)
         db.session.commit()
 
     return generate_api_key(user)
 
 
+# def validate_api_key(api_key):
+#     key_record = APIKey.query.filter_by(user_id=current_user.id).first()
+
+#     if not key_record:
+#         return None  
+
+#     if bcrypt.checkpw(api_key.encode('utf-8'), key_record.key):
+#         return key_record.user  
+#     return None
+
 def validate_api_key(api_key):
-    key_record = APIKey.query.filter_by(user_id=current_user.id).first()
+    """Check if the given plain-text API key is valid"""
+    all_keys = APIKey.query.all()
 
-    if not key_record:
-        return None  
+    for key_record in all_keys:
+        stored_key = key_record.key
+        if isinstance(stored_key, str):
+            stored_key = stored_key.encode('utf-8')
 
-    if bcrypt.checkpw(api_key.encode('utf-8'), key_record.key):
-        return key_record.user  
+        if bcrypt.checkpw(api_key.encode('utf-8'), stored_key):
+            return User.query.get(key_record.user_id)
+
     return None
-

@@ -4,50 +4,68 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Welcome Header -->
     <div class="text-center mb-5">
-        <h2 class="text-purple">Welcome to Your Dashboard</h2>
-        <p class="text-muted">Manage your API access and view usage history.</p>
+        <h2 class="text-purple">Welcome, {{ current_user.email }} 👋</h2>
+        <p class="text-muted">Manage your API access and view usage history below.</p>
     </div>
 
     <!-- API Key Section -->
     <div class="card mb-4 p-4">
         <h5 class="mb-3">Your API Key</h5>
-        {% if api_key %}
+
+        {% with messages = get_flashed_messages(category_filter=["api_key"]) %}
+        {% if messages %}
+        {% for key in messages %}
         <div class="mb-3">
-            <input type="text" class="form-control" value="{{ api_key }}" readonly>
+            <label class="form-label">New API Key</label>
+            <input type="text" class="form-control text-center" value="{{ key }}" readonly>
         </div>
+        {% endfor %}
+        {% elif api_key %}
+        <div class="mb-3">
+            <input type="text" class="form-control text-center" value="{{ api_key }}" readonly>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if api_key %}
         <form method="POST" action="/auth/regenerate-api-key">
-            <button type="submit" class="btn btn-purple">Regenerate API Key</button>
+            <button type="submit" class="btn btn-purple w-100">🔁 Regenerate API Key</button>
         </form>
         {% else %}
         <form method="POST" action="/auth/generate-api-key">
-            <button type="submit" class="btn btn-purple">Generate API Key</button>
+            <button type="submit" class="btn btn-purple w-100">🔑 Generate API Key</button>
         </form>
         {% endif %}
     </div>
 
-    <!-- Usage Table -->
+    <!-- API Usage Table -->
     <div class="card p-4">
         <h5 class="mb-3">API Usage History</h5>
         {% if usages %}
-        <table class="table table-bordered table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Endpoint</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usage in usages %}
-                <tr>
-                    <td>{{ usage.endpoint }}</td>
-                    <td>{{ usage.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Endpoint</th>
+                        <th scope="col">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usage in usages %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ usage.endpoint }}</td>
+                        <td>{{ usage.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <p>No usage data available.</p>
+        <p class="text-muted">No API usage recorded yet. Start using your key to see logs here.</p>
         {% endif %}
     </div>
 </div>

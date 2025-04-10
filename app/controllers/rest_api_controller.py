@@ -60,11 +60,14 @@ def get_all_countries():
 def get_country_by_name(country_name):
     # Validate API key for the logged-in user
     api_key = request.headers.get('X-API-KEY')
+
+    print(api_key)
+
     if not api_key:
         return jsonify({"error": "API key is required."}), 400
 
     user = validate_api_key(api_key)
-    if user != current_user:
+    if not user:
         return jsonify({"error": "Invalid API key."}), 401
 
     try:
