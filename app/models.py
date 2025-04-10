@@ -22,7 +22,7 @@ class APIKey(db.Model):
     __tablename__ = 'api_keys'
 
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(256), unique=True, nullable=False)  # Store hashed API key
+    key = db.Column(db.String(256), unique=True, nullable=False)  
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -43,9 +43,9 @@ class APIUsage(db.Model):
     __tablename__ = 'api_usage'
 
     id = db.Column(db.Integer, primary_key=True)
-    api_key_id = db.Column(db.Integer, db.ForeignKey('api_keys.id'), nullable=False)  # Referencing APIKey
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Referencing User
-    endpoint = db.Column(db.String(256), nullable=False)  # The endpoint accessed
+    api_key_id = db.Column(db.Integer, db.ForeignKey('api_keys.id'), nullable=False)  
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  
+    endpoint = db.Column(db.String(256), nullable=False) 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='api_usages')
