@@ -46,22 +46,31 @@ def user_login(data):
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
 
+    # Validation
     if not email or not password:
-        flash('Email and password are required.', 'danger')
-        return redirect(url_for('authentication.login'))
+        return _handle_login_response("Email and password are required.", False)
 
     user = User.query.filter_by(email=email).first()
     if not user:
-        flash('User does not exist.', 'danger')
-        return redirect(url_for('authentication.login'))
+        return _handle_login_response("User does not exist.", False)
 
     if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
-        flash('Invalid credentials, please try again.', 'danger')
-        return redirect(url_for('authentication.login'))
+        return _handle_login_response("Invalid credentials, please try again.", False)
 
     login_user(user)
-    flash('Login successful!', 'success')
-    return redirect(url_for('authentication.dashboard'))
+    session['plain_api_key'] = None  # Reset any old key stored in session
+    return _handle_login_response("Login successful!", True)
+
+
+def _handle_login_response(message, success):
+    if request.is_json:
+        return (
+            jsonify({"message": message}),
+            200 if success else 401
+        )
+
+    flash(message, "success" if success else "danger")
+    return redirect(url_for('authentication.dashboard' if success else 'authentication.login'))
 
 
 def generate_api_key(user):
@@ -91,16 +100,6 @@ def regenerate_api_key(user):
 
     return generate_api_key(user)
 
-
-# def validate_api_key(api_key):
-#     key_record = APIKey.query.filter_by(user_id=current_user.id).first()
-
-#     if not key_record:
-#         return None  
-
-#     if bcrypt.checkpw(api_key.encode('utf-8'), key_record.key):
-#         return key_record.user  
-#     return None
 
 def validate_api_key(api_key):
     """Check if the given plain-text API key is valid"""

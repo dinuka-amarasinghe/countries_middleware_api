@@ -32,7 +32,7 @@ def login():
                 'email': request.form.get('email'),
                 'password': request.form.get('password')
             }
-        return('Successfully logged in')
+        return user_login(data)
     return render_template('login.html')
 
 

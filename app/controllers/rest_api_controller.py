@@ -9,7 +9,6 @@ from app.models import APIUsage
 import bcrypt
 
 def get_all_countries():
-    # Validate API key for the logged-in user
     api_key = request.headers.get('X-API-KEY')
     if not api_key:
         return jsonify({"error": "API key is required."}), 400
@@ -19,14 +18,12 @@ def get_all_countries():
         return jsonify({"error": "Invalid API key."}), 401
 
     try:
-        # Log API key usage
         log_api_usage(api_key, '/api/countries')
 
         response = requests.get('https://restcountries.com/v3.1/all')
-        response.raise_for_status()  # Raise an error for bad status codes
+        response.raise_for_status()  
         countries = response.json()
 
-        # Filter the relevant fields for each country
         filtered_countries = []
         for country in countries:
             filtered_country = {
@@ -38,7 +35,6 @@ def get_all_countries():
             }
             filtered_countries.append(filtered_country)
 
-        # Manually arrange the keys in the desired order for the entire list of countries
         ordered_countries = [
             OrderedDict([
                 ('name', country['name']),
@@ -58,7 +54,6 @@ def get_all_countries():
     
 
 def get_country_by_name(country_name):
-    # Validate API key for the logged-in user
     api_key = request.headers.get('X-API-KEY')
 
     print(api_key)
@@ -71,12 +66,10 @@ def get_country_by_name(country_name):
         return jsonify({"error": "Invalid API key."}), 401
 
     try:
-        # Log API key usage
         log_api_usage(api_key, f'/api/countries/{country_name}')
 
-        # Request country data from RestCountries API
         response = requests.get(f'https://restcountries.com/v3.1/name/{country_name}')
-        response.raise_for_status()  # Check if the request was successful
+        response.raise_for_status() 
 
         country = response.json()
 
@@ -108,10 +101,10 @@ def get_country_by_name(country_name):
     
 def log_api_usage(api_key_plaintext, endpoint):
     try:
-        from app.models import APIKey  # To avoid circular import if needed
+        from app.models import APIKey  
 
         for key_record in current_user.api_keys:
-            # Ensure both sides of checkpw are bytes
+
             stored_hash = key_record.key
             if isinstance(stored_hash, str):
                 stored_hash = stored_hash.encode('utf-8')
@@ -133,6 +126,5 @@ def log_api_usage(api_key_plaintext, endpoint):
     except Exception as e:
         print(f"Error in log_api_usage: {e}")
         return jsonify({"error": "Error logging API usage."}), 500
-
 
 
