@@ -5,7 +5,7 @@ from app import db
 from collections import OrderedDict
 import requests
 import json
-from app.models import APIKey, APIUsage
+from app.models import APIUsage
 import bcrypt
 
 def get_all_countries():
@@ -124,7 +124,7 @@ def log_api_usage(api_key_plaintext, endpoint):
                 print(f"✅ API usage logged for user {current_user.id} at {endpoint}")
                 return
 
-        print("❌ No matching API key found for logging usage")
+        print("No matching API key found for logging usage")
         return jsonify({"error": "Invalid API key."}), 401
 
     except Exception as e:

@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from dotenv import load_dotenv
@@ -26,7 +26,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return "Flask App is Running!"
+        return render_template('login.html')  
     
     return app
 

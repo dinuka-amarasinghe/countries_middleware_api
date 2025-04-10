@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h2 class="text-purple">Welcome to Your Dashboard</h2>
+        <p class="text-muted">Manage your API access and view usage history.</p>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="card mb-4 p-4">
+        <h5 class="mb-3">Your API Key</h5>
+        {% if api_key %}
+        <div class="mb-3">
+            <input type="text" class="form-control" value="{{ api_key }}" readonly>
+        </div>
+        <form method="POST" action="/auth/regenerate-api-key">
+            <button type="submit" class="btn btn-purple">Regenerate API Key</button>
+        </form>
+        {% else %}
+        <form method="POST" action="/auth/generate-api-key">
+            <button type="submit" class="btn btn-purple">Generate API Key</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Usage Table -->
+    <div class="card p-4">
+        <h5 class="mb-3">API Usage History</h5>
+        {% if usages %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usage in usages %}
+                <tr>
+                    <td>{{ usage.endpoint }}</td>
+                    <td>{{ usage.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No usage data available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

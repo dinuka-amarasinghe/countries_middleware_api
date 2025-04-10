@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint
 from flask_login import login_required
 from app.controllers.rest_api_controller import get_all_countries, get_country_by_name
 
